@@ -42,11 +42,16 @@ combined_budget_join$account_name <- str_to_title(combined_budget_join$account_n
 colnames(combined_budget_join) <- colnames(combined_budget_join) %>% tolower() %>% gsub("x", "", .) %>% gsub("\\.", "_", .)
 
 #rearranging dataframe to match online data
-combined_budget_join<-  combined_budget_join %>% select(dept_code, dept_name, prog_code,
+combined_budget_join <- combined_budget_join %>% select(dept_code, dept_name, prog_code,
                                                         prog_name, fund_code, fund_name, 
                                                         account_code, account_name, new_key, 
                                                         everything())
 
+conbined_budget_long <- gather(combined_budget_join, budget_year, budget_amount, 10:16)
+
 #writing combined budget data into CSV
-write.csv(combined_budget_join, "data/final_budget_la_2014_2018.csv", row.names = FALSE)
+write.csv(combined_budget_join, "data/final_budget_la_2014_2018_wide.csv", row.names = FALSE)
+write.csv(conbined_budget_long, "data/final_budget_la_2014_2018_long.csv", row.names = FALSE)
+
+
 
