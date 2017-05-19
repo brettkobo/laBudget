@@ -1,5 +1,5 @@
 ---
-title: "New budget test"
+title: "Budget Data Cleaning"
 author: "Chelsea Ursaner & Brett Kobold"
 date: "5/18/2017"
 output: word_document
@@ -29,13 +29,14 @@ appropriations_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosper
 
 
 ###This is not part of the general workflow, but I need to take out the appropriations I added that don't have all the right information
-budget1 <- appropriations_existing %>% filter(Fiscal_Year != 2018)
-
-str(appropriations_existing)
+appropriations_existing <- appropriations_existing %>% filter(Fiscal_Year != 2018) 
 #Pull new data from Excel extract
-appropriations_new <- read_excel("data/General_Fund_Revenue_1718Proposed (1).xlsx", 1) %>% data.frame()
-gf_new <- gf_new %>% select(Dept.Code, Dept.Name, Prog.Code, Prog.Name, Fund.Code, Fund.Name, Account.Code, Account.Name, X2016.17.Estimates, X2017.18.Proposed)
+setwd("~/R_labs/laBudget/FY17-18 Proposed Budget")
+appropriations_new <- read_excel("Expenditures_Sec2 All Regular Depts and NonDepts_1718Proposed.xlsx", 1) %>% data.frame()
+appropriations_new <- appropriations_new %>% select(-Org.Level.5.Code, -Org.Level.5.Name)
 
+names(appropriations_existing)
+names(appropriations_new)
 ```
 
 ## Including Plots
