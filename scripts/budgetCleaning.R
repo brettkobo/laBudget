@@ -5,10 +5,10 @@ library(tidyr) #allows for melt and cast
 library(magrittr) #pipeforwarding package %>% 
 library(readxl) #reading the excel file
 library(stringr) #working with strings eaiser
+library(RSocrata)
 
 #reading in data from data.lacity.org and downloaded files
 #Pull existing data from Socrata
-library(RSocrata)
 gf_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosperous-City/General-Fund-Revenue/qrkr-kfbh')
 
 #Pull new data from Excel extract

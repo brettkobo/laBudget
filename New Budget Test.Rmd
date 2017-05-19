@@ -5,21 +5,37 @@ date: "5/18/2017"
 output: word_document
 ---
 
-##Heading
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+##Appropriations
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r}
+library(dplyr) #moving and shaping the data
+library(tidyr) #allows for melt and cast
+library(magrittr) #pipeforwarding package %>% 
+library(readxl) #reading the excel file
+library(stringr) #working with strings eaiser
+library(RSocrata)
+
+#reading in data from data.lacity.org and downloaded files
+#Pull existing data from Socrata
+appropriations_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosperous-City/Open-Budget-Appropriations-Fiscal-Years-2010-2018/5242-pnmt')
+
+
+###This is not part of the general workflow, but I need to take out the appropriations I added that don't have all the right information
+budget1 <- appropriations_existing %>% filter(Fiscal_Year != 2018)
+
+str(appropriations_existing)
+#Pull new data from Excel extract
+appropriations_new <- read_excel("data/General_Fund_Revenue_1718Proposed (1).xlsx", 1) %>% data.frame()
+gf_new <- gf_new %>% select(Dept.Code, Dept.Name, Prog.Code, Prog.Name, Fund.Code, Fund.Name, Account.Code, Account.Name, X2016.17.Estimates, X2017.18.Proposed)
+
 ```
 
 ## Including Plots
