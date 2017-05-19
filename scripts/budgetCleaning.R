@@ -6,52 +6,56 @@ library(magrittr) #pipeforwarding package %>%
 library(readxl) #reading the excel file
 library(stringr) #working with strings eaiser
 
-#reading in data from downloaded files
-budget_existing <- read.csv("data/General_Fund_Revenue.csv", stringsAsFactors = FALSE)
-budget_new <- read_excel("data/General_Fund_Revenue_1718Proposed (1).xlsx", 1) %>% data.frame()
-budget_new <- budget_new %>% select(Dept.Code, Dept.Name, Prog.Code, Prog.Name, Fund.Code, Fund.Name, Account.Code, Account.Name, X2016.17.Estimates, X2017.18.Proposed)
+#reading in data from data.lacity.org and downloaded files
+#Pull existing data from Socrata
+library(RSocrata)
+gf_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosperous-City/General-Fund-Revenue/qrkr-kfbh')
+
+#Pull new data from Excel extract
+gf_new <- read_excel("data/General_Fund_Revenue_1718Proposed (1).xlsx", 1) %>% data.frame()
+gf_new <- gf_new %>% select(Dept.Code, Dept.Name, Prog.Code, Prog.Name, Fund.Code, Fund.Name, Account.Code, Account.Name, X2016.17.Estimates, X2017.18.Proposed)
 
 #creating a unique key to for each budget line item to make it easier to melt
-budget_existing$new_key <- paste0(budget_existing$Dept.Code, budget_existing$Program.Code, budget_existing$Fund.Code, budget_existing$Account.Code)
-budget_new$new_key <- paste0(budget_new$Dept.Code, budget_new$Prog.Code, budget_new$Fund.Code, budget_new$Account.Code)
+gf_existing$new_key <- paste0(gf_existing$Dept.Code, gf_existing$Program.Code, gf_existing$Fund.Code, gf_existing$Account.Code)
+gf_new$new_key <- paste0(gf_new$Dept.Code, gf_new$Prog.Code, gf_new$Fund.Code, gf_new$Account.Code)
 
 #melting the data to long form
-budget_exi_melt <- gather(budget_existing, new_key, budgets, 9:13)
-budget_new_melt <- gather(budget_new, key = new_key, value = budget, 9:10)
+gf_exi_melt <- gather(gf_existing, new_key, budgets, 9:13)
+gf_new_melt <- gather(gf_new, key = new_key, value = budget, 9:10)
 
 #setting the coloum names to be the same to allowing for the datasets to be combined
 new_col_names <- c("dept_code", "dept_name", "prog_code", "prog_name", "fund_code", "fund_name", "account_code", "account_name", "new_key", "budget_year", "budget_value")
-colnames(budget_exi_melt) <- new_col_names
-colnames(budget_new_melt) <- new_col_names
+colnames(gf_exi_melt) <- new_col_names
+colnames(gf_new_melt) <- new_col_names
 
 #creating unique key for each line item in the budget
-lookup_key <- rbind(budget_exi_melt, budget_new_melt) %>% 
+lookup_key <- rbind(gf_exi_melt, gf_new_melt) %>% 
   select(dept_code, dept_name, prog_code, prog_name, fund_code, fund_name, account_code, account_name, new_key) 
 lookup_key$account_name <- lookup_key$account_name %>% toupper() %>% trimws() 
 lookup_key <- lookup_key %>% distinct(new_key, .keep_all = TRUE)
 
 #combing both datset together and casting the data to wide format
-combined_budget <- rbind(budget_exi_melt, budget_new_melt) %>% select(new_key, budget_year, budget_value)
-conbined_budget_spread <- spread(combined_budget, budget_year, budget_value)
+combined_gf <- rbind(gf_exi_melt, gf_new_melt) %>% select(new_key, budget_year, budget_value)
+combined_gf_spread <- spread(combined_gf, budget_year, budget_value)
 
 #joining the the unique line item keys with values
-combined_budget_join <- left_join(conbined_budget_spread, lookup_key, by = c("new_key", "new_key"))
-combined_budget_join$account_name <- str_to_title(combined_budget_join$account_name)
+combined_gf_join <- left_join(combined_gf_spread, lookup_key, by = c("new_key", "new_key"))
+combined_gf_join$account_name <- str_to_title(combined_gf_join$account_name)
 
 #makiing the colnames easier to read and normalized
-colnames(combined_budget_join) <- colnames(combined_budget_join) %>% tolower() %>% gsub("x", "", .) %>% gsub("\\.", "_", .)
+colnames(combined_gf_join) <- colnames(combined_gf_join) %>% tolower() %>% gsub("x", "", .) %>% gsub("\\.", "_", .)
 
 #rearranging dataframe to match online data
-combined_budget_join <- combined_budget_join %>% select(dept_code, dept_name, prog_code,
+combined_gf_join <- combined_gf_join %>% select(dept_code, dept_name, prog_code,
                                                         prog_name, fund_code, fund_name, 
                                                         account_code, account_name, new_key, 
                                                         everything())
 
-conbined_budget_long <- gather(combined_budget_join, budget_year, budget_amount, 10:16)
+combined_gf_long <- gather(combined_gf_join, budget_year, revenue_amount, 10:16)
 
 #writing combined budget data into CSV
-write.csv(combined_budget_join, "data/final_budget_la_2014_2018_wide.csv", row.names = FALSE)
-write.csv(conbined_budget_long, "data/final_budget_la_2014_2018_long.csv", row.names = FALSE)
+write.csv(combined_gf_join, "data/final_budget_la_2014_2018_wide.csv", row.names = FALSE)
+write.csv(combined_gf_long, "data/final_budget_la_2014_2018_long.csv", row.names = FALSE)
 
 
 
