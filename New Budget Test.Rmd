@@ -30,14 +30,27 @@ appropriations_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosper
 
 ###This is not part of the general workflow, but I need to take out the appropriations I added that don't have all the right information
 appropriations_existing <- appropriations_existing %>% filter(Fiscal_Year != 2018) 
+
+#Export to start working in Excel to do a vlookup
+write.csv(appropriations_existing, "working_appropriations.csv", row.names = F)
+
+
 #Pull new data from Excel extract
 setwd("~/R_labs/laBudget/FY17-18 Proposed Budget")
 appropriations_new <- read_excel("Expenditures_Sec2 All Regular Depts and NonDepts_1718Proposed.xlsx", 1) %>% data.frame()
-appropriations_new <- appropriations_new %>% select(-Org.Level.5.Code, -Org.Level.5.Name)
 
-names(appropriations_existing)
-names(appropriations_new)
+#make it look like the original dataset
+appropriations_new <- appropriations_new %>% select(-c(13:15))
+
+#Export to start working in Excel to do a vlookup
+#working dataset
+write.csv(appropriations_existing, "working_appropriations.csv", row.names = F)
+#new values
+write.csv(appropriations_new, "new_appropriations.csv", row.names = F)
 ```
+
+... and do the rest in excel, tableau, and datasync unless we want to try it with R
+
 
 ## Including Plots
 
