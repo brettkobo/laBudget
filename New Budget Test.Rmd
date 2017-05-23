@@ -11,9 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##Appropriations
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Appropriations are also known as budget expenses or allocations. The challenging piece here is to assign the 'priority outcome' which can fall into four categories: Make LA the Best Run City in America, Make LA the Safest.., Provide Good Jobs to All Angelenos, and Make LA the Most Livable and Sustainable Big City..
 
 ```{r}
 library(dplyr) #moving and shaping the data
@@ -34,7 +32,6 @@ appropriations_existing <- appropriations_existing %>% filter(Fiscal_Year != 201
 #Export to start working in Excel to do a vlookup
 write.csv(appropriations_existing, "working_appropriations.csv", row.names = F)
 
-
 #Pull new data from Excel extract
 setwd("~/R_labs/laBudget/FY17-18 Proposed Budget")
 appropriations_new <- read_excel("Expenditures_Sec2 All Regular Depts and NonDepts_1718Proposed.xlsx", 1) %>% data.frame()
@@ -51,13 +48,25 @@ write.csv(appropriations_new, "new_appropriations.csv", row.names = F)
 
 ... and do the rest in excel, tableau, and datasync unless we want to try it with R
 
+```{r}
+#Read the new new appropriations file
+setwd("~/R_labs/laBudget/FY17-18 Proposed Budget")
+appropriations_new <- read.csv("new_new_appropriations.csv")
+
+#Make sure they match
+names(appropriations_existing)
+names(appropriations_new)
+
+appropriations = rbind(appropriations_existing, appropriations_new)
+write.csv(appropriations, 'appropriations_final.csv', row.names = F)
+```
 
 ## Including Plots
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
