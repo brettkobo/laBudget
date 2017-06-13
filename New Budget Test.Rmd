@@ -9,6 +9,42 @@ output: word_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+##Incremental changes
+
+Changes from previous years with descriptions
+
+```{r}
+library(dplyr) #moving and shaping the data
+library(tidyr) #allows for melt and cast
+library(magrittr) #pipeforwarding package %>% 
+library(readxl) #reading the excel file
+library(stringr) #working with strings eaiser
+library(RSocrata)
+
+#Read in data from data.lacity.org and downloaded files
+#Pull existing data from Socrata
+inc_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosperous-City/General-City-Budget-Incremental-Changes/k4k6-bwwv')
+#transfer old dataset to tidy format
+inc_existing_tidy <- gather(inc_existing, "Budget", "n", 16:17, na.rm=T)
+
+#Read in data from new excel file
+setwd("~/R_labs/laBudget/FY17-18 Adopted Budget")
+inc_new <- read_excel("Budget Requests Detail Sec2_1718Adopted.xls", 1) %>% data.frame()
+#transfer new dataset to tidy format
+inc_new_tidy <- gather(inc_new, "Budget", "n", 14:15, na.rm=T)
+
+###Make master dataset
+#Make sure column names match
+inc_existing_tidy <- rename(inc_existing_tidy, One.Time..On.going = One.Time..01....On.going..BB.)
+inc_new_tidy <- rename(inc_new_tidy, Account.Code = Budget.Object.Code, Account.Name = Audit.Budget.Object.Name)
+
+inc <- rbind(inc_existing_tidy, inc_new_tidy)
+inc <- inc %>% rename(Incremental.Change = n)
+
+write.csv(inc, "incremental.csv", row.names=F)
+
+```
+
 ##Appropriations
 
 Appropriations are also known as budget expenses or allocations. The challenging piece here is to assign the 'priority outcome' which can fall into four categories: Make LA the Best Run City in America, Make LA the Safest.., Provide Good Jobs to All Angelenos, and Make LA the Most Livable and Sustainable Big City..
@@ -26,18 +62,17 @@ library(RSocrata)
 appropriations_existing <- read.socrata(url = 'https://data.lacity.org/A-Prosperous-City/Open-Budget-Appropriations-Fiscal-Years-2010-2018/5242-pnmt')
 
 
-###This is not part of the general workflow, but I need to take out the appropriations I added that don't have all the right information
+###Remove proposed to replace with adopted
 appropriations_existing <- appropriations_existing %>% filter(Fiscal_Year != 2018) 
-
 #Export to start working in Excel to do a vlookup
 write.csv(appropriations_existing, "working_appropriations.csv", row.names = F)
 
 #Pull new data from Excel extract
-setwd("~/R_labs/laBudget/FY17-18 Proposed Budget")
-appropriations_new <- read_excel("Expenditures_Sec2 All Regular Depts and NonDepts_1718Proposed.xlsx", 1) %>% data.frame()
+setwd("~/R_labs/laBudget/FY17-18 Adopted Budget")
+appropriations_new <- read_excel("Expenditures_Sec2 All Regular Depts and NonDepts_1718Adopted.xls", 1) %>% data.frame()
 
 #make it look like the original dataset
-appropriations_new <- appropriations_new %>% select(-c(13:15))
+appropriations_new <- appropriations_new %>% select(-c(13:16))
 
 #Export to start working in Excel to do a vlookup
 #working dataset
@@ -50,7 +85,7 @@ write.csv(appropriations_new, "new_appropriations.csv", row.names = F)
 
 ```{r}
 #Read the new new appropriations file
-setwd("~/R_labs/laBudget/FY17-18 Proposed Budget")
+#setwd("~/R_labs/laBudget/FY17-18 Adopted Budget")
 appropriations_new <- read.csv("new_new_appropriations.csv")
 
 #Make sure they match
@@ -59,14 +94,5 @@ names(appropriations_new)
 
 appropriations = rbind(appropriations_existing, appropriations_new)
 write.csv(appropriations, 'appropriations_final.csv', row.names = F)
+#replace using datasync
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r}
-
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
